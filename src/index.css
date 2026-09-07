@@ -1,0 +1,227 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,600&family=Inter:wght@300;400;500;600&family=DM+Mono:wght@300;400;500&display=swap');
+@import 'tailwindcss';
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --ivory: #f5f0e8;
+  --ivory-dark: #ede7d9;
+  --ink: #1a1612;
+  --ink-muted: #4a4340;
+  --burgundy: #7c1d2e;
+  --burgundy-light: #a32d42;
+  --burgundy-pale: #f0e4e7;
+  --gold: #c9954a;
+  --hairline: rgba(26, 22, 18, 0.15);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.font-display {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+.font-body {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.font-mono {
+  font-family: 'DM Mono', 'Courier New', monospace;
+}
+
+/* Paper texture overlay */
+.paper-texture::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Slide transitions */
+.slide-enter {
+  animation: slideIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hide scrollbars */
+::-webkit-scrollbar { display: none; }
+* { scrollbar-width: none; }
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+.presentation-controls {
+  padding: 6px 8px;
+  border: 1px solid rgba(245, 240, 232, 0.09);
+  background: rgba(17, 14, 12, 0.36);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(10px);
+}
+
+.bibliography-jump {
+  margin-left: 8px;
+  padding: 8px 12px;
+  border: 1px solid rgba(245, 240, 232, 0.2);
+  background: transparent;
+  color: rgba(245, 240, 232, 0.72);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 150ms ease, border-color 150ms ease, background 150ms ease;
+}
+
+.bibliography-jump:hover {
+  color: #fff;
+  border-color: rgba(245, 240, 232, 0.46);
+  background: rgba(245, 240, 232, 0.07);
+}
+
+.bibliography-slide::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  background: linear-gradient(to bottom, var(--burgundy), var(--gold));
+  z-index: 2;
+}
+
+.bibliography-heading {
+  margin: 0 0 10px;
+  color: var(--burgundy);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.61rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.reference-list,
+.image-reference-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.reference-item {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 8px;
+  align-items: start;
+}
+
+.reference-number,
+.image-reference-index {
+  color: var(--burgundy);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.57rem;
+  letter-spacing: 0.05em;
+  padding-top: 2px;
+}
+
+.reference-copy {
+  margin: 0;
+  color: var(--ink-muted);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.665rem;
+  line-height: 1.32;
+}
+
+.reference-copy strong,
+.image-reference strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.reference-link {
+  display: inline-block;
+  margin-top: 1px;
+  color: var(--burgundy);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.54rem;
+  letter-spacing: 0.035em;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(124, 29, 46, 0.22);
+}
+
+.reference-link:hover {
+  color: var(--burgundy-light);
+  border-bottom-color: currentColor;
+}
+
+.image-reference {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 8px;
+  color: var(--ink-muted);
+  text-decoration: none;
+}
+
+.image-reference > span:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.64rem;
+  line-height: 1.28;
+}
+
+.image-reference > span:last-child > span {
+  color: var(--ink-muted);
+}
+
+.image-reference:hover strong,
+.image-reference:hover > span:last-child > span {
+  color: var(--burgundy);
+}
+
+@media (max-width: 760px) {
+  .presentation-controls {
+    gap: 8px;
+  }
+
+  .presentation-controls > span,
+  .bibliography-jump {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slide-enter {
+    animation: none;
+  }
+
+  * {
+    scroll-behavior: auto !important;
+  }
+}

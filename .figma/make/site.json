@@ -1,0 +1,10 @@
+{
+  "description": "Crafts elegant, historically styled Ukrainian presentations highlighting groundbreaking inventions with minimal text and rich archival visuals for educational impact.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
