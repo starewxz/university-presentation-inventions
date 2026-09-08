@@ -1,5 +1,10 @@
 {
+  "title": "Три винаходи, які шокували людство — Десятник Тетяна",
+  "language": "uk",
   "description": "Crafts elegant, historically styled Ukrainian presentations highlighting groundbreaking inventions with minimal text and rich archival visuals for educational impact.",
+  "icons": {
+    "icon": "./favicon.png"
+  },
   "robots": {
     "index": false
   },

@@ -9,6 +9,11 @@ body,
   padding: 0;
 }
 
+body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 :root {
   --ivory: #f5f0e8;
   --ivory-dark: #ede7d9;
@@ -79,12 +84,85 @@ a:focus-visible {
   outline-offset: 3px;
 }
 
+.presentation-app {
+  width: 100%;
+  min-height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 20px;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 12%, #342b26 0%, #201b18 46%, #171311 100%);
+}
+
+.presentation-stage-region {
+  width: 100%;
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  touch-action: pan-y;
+}
+
+.presentation-stage-frame {
+  position: relative;
+  flex: none;
+  overflow: hidden;
+  border: 1px solid rgba(245, 240, 232, 0.18);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.62), 0 2px 0 rgba(255, 255, 255, 0.05) inset;
+}
+
+.presentation-stage {
+  width: 1280px;
+  height: 720px;
+  transform-origin: top left;
+  will-change: transform;
+}
+
+.orientation-gate {
+  display: none;
+}
+
 .presentation-controls {
+  flex: none;
+  min-height: 50px;
   padding: 6px 8px;
   border: 1px solid rgba(245, 240, 232, 0.09);
   background: rgba(17, 14, 12, 0.36);
   box-shadow: 0 10px 34px rgba(0, 0, 0, 0.22);
   backdrop-filter: blur(10px);
+}
+
+.slide-dots {
+  gap: 0;
+}
+
+.slide-dot {
+  width: 24px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.slide-dot > span {
+  width: 6px;
+  height: 6px;
+  display: block;
+  background: rgba(245, 240, 232, 0.25);
+  transition: width 180ms ease, background 180ms ease;
+}
+
+.slide-dot > span.active {
+  width: 20px;
+  background: var(--ivory);
 }
 
 .bibliography-jump {
@@ -206,11 +284,159 @@ a:focus-visible {
 }
 
 @media (max-width: 760px) {
-  .presentation-controls {
+  .presentation-app {
     gap: 8px;
+    padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
   }
 
-  .presentation-controls > span,
+  .presentation-controls {
+    width: min(100%, 390px);
+    min-height: 54px;
+    justify-content: space-between;
+    gap: 2px;
+    padding: 5px;
+  }
+
+  .current-slide-label,
+  .bibliography-jump {
+    display: none;
+  }
+
+  .slide-dot {
+    width: 26px;
+    height: 44px;
+  }
+
+  .presentation-stage-frame {
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.56);
+  }
+}
+
+@media (max-width: 900px) and (orientation: portrait) {
+  .orientation-gate {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
+    background:
+      radial-gradient(circle at 50% 22%, rgba(124, 29, 46, 0.34), transparent 42%),
+      rgba(20, 16, 14, 0.94);
+    backdrop-filter: blur(14px);
+  }
+
+  .orientation-gate--dismissed {
+    display: none;
+  }
+
+  .orientation-card {
+    width: min(100%, 390px);
+    padding: 30px 26px 24px;
+    text-align: center;
+    border: 1px solid rgba(245, 240, 232, 0.2);
+    background: linear-gradient(155deg, rgba(245, 240, 232, 0.1), rgba(245, 240, 232, 0.035));
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.42);
+  }
+
+  .orientation-symbol {
+    width: 88px;
+    height: 66px;
+    margin: 0 auto 18px;
+    color: var(--gold);
+  }
+
+  .orientation-symbol svg {
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .orientation-kicker {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--gold);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .orientation-card h2 {
+    margin: 0;
+    color: var(--ivory);
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(1.8rem, 8vw, 2.45rem);
+    line-height: 1.08;
+  }
+
+  .orientation-card p {
+    margin: 16px auto 22px;
+    color: rgba(245, 240, 232, 0.68);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.94rem;
+    line-height: 1.55;
+  }
+
+  .orientation-card button {
+    min-height: 46px;
+    padding: 0 18px;
+    border: 1px solid rgba(245, 240, 232, 0.28);
+    background: transparent;
+    color: rgba(245, 240, 232, 0.78);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.07em;
+    cursor: pointer;
+  }
+
+  .orientation-card button:hover {
+    color: #fff;
+    border-color: rgba(245, 240, 232, 0.55);
+    background: rgba(245, 240, 232, 0.07);
+  }
+}
+
+@media (max-height: 520px) and (orientation: landscape) {
+  .presentation-app {
+    flex-direction: row;
+    gap: 8px;
+    padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+  }
+
+  .presentation-controls {
+    width: 54px;
+    min-height: 0;
+    align-self: stretch;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0;
+  }
+
+  .slide-dots {
+    flex-direction: column;
+  }
+
+  .slide-dot {
+    width: 44px;
+    height: 24px;
+  }
+
+  .slide-dot > span {
+    width: 6px;
+    height: 6px;
+  }
+
+  .slide-dot > span.active {
+    width: 6px;
+    height: 18px;
+  }
+
+  .current-slide-label,
   .bibliography-jump {
     display: none;
   }

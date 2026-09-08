@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 const TOTAL_SLIDES = 6;
 
@@ -258,8 +258,16 @@ function Slide1() {
         </div>
 
         {/* Bottom credit */}
-        <div className="font-mono text-xs" style={{ color: "rgba(26,22,18,0.3)", letterSpacing: "0.06em" }}>
-          Montgolfier · Morton · Woodland & Silver
+        <div className="flex items-end justify-between gap-6">
+          <div className="font-mono text-xs" style={{ color: "rgba(26,22,18,0.3)", letterSpacing: "0.06em" }}>
+            Montgolfier · Morton · Woodland & Silver
+          </div>
+          <div
+            className="font-body text-xs"
+            style={{ color: "var(--burgundy)", fontWeight: 600, letterSpacing: "0.02em", whiteSpace: "nowrap" }}
+          >
+            Виконала: Десятник Тетяна
+          </div>
         </div>
       </div>
 
@@ -1198,13 +1206,14 @@ function Slide6() {
 /* ══════════════════════════════════════════
    NAVIGATION
 ══════════════════════════════════════════ */
-function NavBtn({ onClick, disabled, children }: { onClick: () => void; disabled?: boolean; children: React.ReactNode }) {
+function NavBtn({ onClick, disabled, children, label }: { onClick: () => void; disabled?: boolean; children: React.ReactNode; label: string }) {
   return (
     <button
       onClick={onClick}
       disabled={disabled}
+      aria-label={label}
       style={{
-        width: "36px", height: "36px",
+        width: "44px", height: "44px",
         background: disabled ? "transparent" : "var(--ivory)",
         border: `1px solid ${disabled ? "rgba(245,240,232,0.15)" : "rgba(245,240,232,0.35)"}`,
         color: disabled ? "rgba(245,240,232,0.2)" : "var(--ivory)",
@@ -1225,12 +1234,16 @@ const SLIDE_LABELS = ["Обкладинка", "Повітряна куля", "А
 export default function App() {
   const [current, setCurrent] = useState(0);
   const [key, setKey] = useState(0);
+  const [stageScale, setStageScale] = useState(1);
+  const [orientationNoticeDismissed, setOrientationNoticeDismissed] = useState(false);
+  const stageRegionRef = useRef<HTMLDivElement>(null);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
-  const goTo = (i: number) => {
+  const goTo = useCallback((i: number) => {
     if (i < 0 || i >= TOTAL_SLIDES) return;
     setCurrent(i);
     setKey((k) => k + 1);
-  };
+  }, []);
 
   const Slide = SLIDES[current];
 
@@ -1243,70 +1256,126 @@ export default function App() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [current]);
+  }, [current, goTo]);
+
+  useLayoutEffect(() => {
+    const region = stageRegionRef.current;
+    if (!region) return;
+
+    const measure = () => {
+      const nextScale = Math.min(region.clientWidth / 1280, region.clientHeight / 720, 1);
+      setStageScale(Math.max(nextScale, 0.1));
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(region);
+    window.visualViewport?.addEventListener("resize", measure);
+
+    return () => {
+      observer.disconnect();
+      window.visualViewport?.removeEventListener("resize", measure);
+    };
+  }, []);
+
+  const onTouchStart = (event: React.TouchEvent) => {
+    const touch = event.changedTouches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const onTouchEnd = (event: React.TouchEvent) => {
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+    if (!start) return;
+
+    const touch = event.changedTouches[0];
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    if (Math.abs(deltaX) < 48 || Math.abs(deltaX) < Math.abs(deltaY) * 1.25) return;
+    goTo(deltaX < 0 ? current + 1 : current - 1);
+  };
 
   return (
-    <div
-      className="flex flex-col items-center justify-center min-h-screen"
-      style={{
-        background: "radial-gradient(circle at 50% 12%, #342b26 0%, #201b18 46%, #171311 100%)",
-        padding: "20px",
-      }}
-    >
-      {/* Slide frame */}
-      <div
-        className="relative"
-        style={{
-          width: "min(1280px, calc(100vw - 40px))",
-          aspectRatio: "16 / 9",
-          maxHeight: "calc(100vh - 100px)",
-          border: "1px solid rgba(245,240,232,0.18)",
-          boxShadow: "0 28px 90px rgba(0,0,0,0.62), 0 2px 0 rgba(255,255,255,0.05) inset",
-        }}
+    <main className="presentation-app">
+      <aside
+        className={`orientation-gate${orientationNoticeDismissed ? " orientation-gate--dismissed" : ""}`}
+        aria-label="Порада щодо орієнтації екрана"
       >
-        <div key={key} className="w-full h-full">
-          <Slide />
+        <div className="orientation-card">
+          <div className="orientation-symbol" aria-hidden="true">
+            <svg viewBox="0 0 96 72" role="img">
+              <rect x="34" y="12" width="30" height="50" rx="5" />
+              <path d="M22 42c-4-17 7-33 24-38" />
+              <path d="m39 3 8 1-4 7" />
+            </svg>
+          </div>
+          <span className="orientation-kicker">Презентація · формат 16:9</span>
+          <h2>Поверніть телефон горизонтально</h2>
+          <p>
+            Так слайди, підписи й академічні джерела відображатимуться у правильному масштабі.
+          </p>
+          <button type="button" onClick={() => setOrientationNoticeDismissed(true)}>
+            Продовжити вертикально
+          </button>
+        </div>
+      </aside>
+
+      <div
+        ref={stageRegionRef}
+        className="presentation-stage-region"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        <div
+          className="presentation-stage-frame"
+          style={{ width: `${1280 * stageScale}px`, height: `${720 * stageScale}px` }}
+        >
+          <div
+            className="presentation-stage"
+            style={{ transform: `scale(${stageScale})` }}
+            role="group"
+            aria-roledescription="слайд"
+            aria-label={`${current + 1} з ${TOTAL_SLIDES}: ${SLIDE_LABELS[current]}`}
+          >
+            <div key={key} className="w-full h-full">
+              <Slide />
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Controls */}
-      <div className="presentation-controls flex items-center gap-4 mt-4">
-        <NavBtn onClick={() => goTo(current - 1)} disabled={current === 0}>←</NavBtn>
+      <nav className="presentation-controls flex items-center gap-3" aria-label="Навігація презентацією">
+        <NavBtn onClick={() => goTo(current - 1)} disabled={current === 0} label="Попередній слайд">←</NavBtn>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center slide-dots">
           {SLIDES.map((_, i) => (
             <button
               key={i}
+              className="slide-dot"
               onClick={() => goTo(i)}
               title={SLIDE_LABELS[i]}
               aria-label={`Перейти до слайда ${i + 1}: ${SLIDE_LABELS[i]}`}
               aria-current={i === current ? "page" : undefined}
-              style={{
-                width: i === current ? "24px" : "6px",
-                height: "6px",
-                background: i === current ? "var(--ivory)" : "rgba(245,240,232,0.25)",
-                border: "none",
-                cursor: "pointer",
-                padding: 0,
-                transition: "all 0.2s",
-              }}
-            />
+            >
+              <span className={i === current ? "active" : ""} />
+            </button>
           ))}
         </div>
 
-        <NavBtn onClick={() => goTo(current + 1)} disabled={current === TOTAL_SLIDES - 1}>→</NavBtn>
+        <NavBtn onClick={() => goTo(current + 1)} disabled={current === TOTAL_SLIDES - 1} label="Наступний слайд">→</NavBtn>
 
         <span
-          className="font-mono text-xs ml-1"
+          className="current-slide-label font-mono text-xs ml-1"
           style={{ color: "rgba(245,240,232,0.35)", letterSpacing: "0.1em", fontFamily: "'DM Mono', monospace" }}
         >
-          {SLIDE_LABELS[current]}
+          {String(current + 1).padStart(2, "0")} / {String(TOTAL_SLIDES).padStart(2, "0")} · {SLIDE_LABELS[current]}
         </span>
 
         <button className="bibliography-jump" onClick={() => goTo(TOTAL_SLIDES - 1)}>
           Джерела
         </button>
-      </div>
-    </div>
+      </nav>
+    </main>
   );
 }
