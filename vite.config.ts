@@ -9,17 +9,9 @@ import siteConfiguration from './.figma/make/site.json'
 export default defineConfig(({ mode }) => {
   // .figma/make/deploy-preview passes `--mode development` for cached-preview builds.
   const emitSourcemaps = mode === 'development'
-  const githubRepositoryName = process.env.GITHUB_REPOSITORY?.split('/')[1]
-  const githubPagesBase = githubRepositoryName && !githubRepositoryName.endsWith('.github.io')
-    ? `/${githubRepositoryName}/`
-    : '/'
 
   return {
-    base: process.env.FIGMA_PUBLIC_URL
-      ? `${process.env.FIGMA_PUBLIC_URL}/`
-      : process.env.GITHUB_ACTIONS
-        ? githubPagesBase
-        : '/',
+    base: process.env.FIGMA_PUBLIC_URL ? `${process.env.FIGMA_PUBLIC_URL}/` : '/',
     build: {
       sourcemap: emitSourcemaps ? 'inline' : false,
       minify: !emitSourcemaps,

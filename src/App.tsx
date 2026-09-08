@@ -1209,6 +1209,7 @@ function Slide6() {
 function NavBtn({ onClick, disabled, children, label }: { onClick: () => void; disabled?: boolean; children: React.ReactNode; label: string }) {
   return (
     <button
+      className="nav-arrow"
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
@@ -1299,6 +1300,8 @@ export default function App() {
     <main className="presentation-app">
       <aside
         className={`orientation-gate${orientationNoticeDismissed ? " orientation-gate--dismissed" : ""}`}
+        role="dialog"
+        aria-modal="true"
         aria-label="Порада щодо орієнтації екрана"
       >
         <div className="orientation-card">
@@ -1320,62 +1323,81 @@ export default function App() {
         </div>
       </aside>
 
-      <div
-        ref={stageRegionRef}
-        className="presentation-stage-region"
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
-      >
+      <header className="deck-header">
+        <div className="deck-identity">
+          <img src="./favicon.png" alt="" />
+          <div>
+            <span>Академічна презентація · 2026</span>
+            <strong>Три винаходи, які шокували людство</strong>
+          </div>
+        </div>
+        <div className="deck-progress" aria-label={`Слайд ${current + 1} із ${TOTAL_SLIDES}`}>
+          <span>{String(current + 1).padStart(2, "0")} / {String(TOTAL_SLIDES).padStart(2, "0")}</span>
+          <div aria-hidden="true">
+            <i style={{ width: `${((current + 1) / TOTAL_SLIDES) * 100}%` }} />
+          </div>
+        </div>
+      </header>
+
+      <div className="presentation-workspace">
         <div
-          className="presentation-stage-frame"
-          style={{ width: `${1280 * stageScale}px`, height: `${720 * stageScale}px` }}
+          ref={stageRegionRef}
+          className="presentation-stage-region"
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
         >
           <div
-            className="presentation-stage"
-            style={{ transform: `scale(${stageScale})` }}
-            role="group"
-            aria-roledescription="слайд"
-            aria-label={`${current + 1} з ${TOTAL_SLIDES}: ${SLIDE_LABELS[current]}`}
+            className="presentation-stage-frame"
+            style={{ width: `${1280 * stageScale}px`, height: `${720 * stageScale}px` }}
           >
-            <div key={key} className="w-full h-full">
-              <Slide />
+            <div
+              className="presentation-stage"
+              style={{ transform: `scale(${stageScale})` }}
+              role="group"
+              aria-roledescription="слайд"
+              aria-label={`${current + 1} з ${TOTAL_SLIDES}: ${SLIDE_LABELS[current]}`}
+            >
+              <div key={key} className="w-full h-full">
+                <Slide />
+              </div>
             </div>
           </div>
         </div>
+
+        <nav className="presentation-controls flex items-center gap-3" aria-label="Навігація презентацією">
+          <NavBtn onClick={() => goTo(current - 1)} disabled={current === 0} label="Попередній слайд">←</NavBtn>
+
+          <div className="flex items-center slide-dots">
+            {SLIDES.map((_, i) => (
+              <button
+                key={i}
+                className="slide-dot"
+                onClick={() => goTo(i)}
+                title={SLIDE_LABELS[i]}
+                aria-label={`Перейти до слайда ${i + 1}: ${SLIDE_LABELS[i]}`}
+                aria-current={i === current ? "page" : undefined}
+              >
+                <span className={i === current ? "active" : ""} />
+              </button>
+            ))}
+          </div>
+
+          <NavBtn onClick={() => goTo(current + 1)} disabled={current === TOTAL_SLIDES - 1} label="Наступний слайд">→</NavBtn>
+
+          <span className="current-slide-label">
+            {SLIDE_LABELS[current]}
+          </span>
+
+          <button className="bibliography-jump" onClick={() => goTo(TOTAL_SLIDES - 1)}>
+            Джерела
+          </button>
+        </nav>
       </div>
 
-      {/* Controls */}
-      <nav className="presentation-controls flex items-center gap-3" aria-label="Навігація презентацією">
-        <NavBtn onClick={() => goTo(current - 1)} disabled={current === 0} label="Попередній слайд">←</NavBtn>
-
-        <div className="flex items-center slide-dots">
-          {SLIDES.map((_, i) => (
-            <button
-              key={i}
-              className="slide-dot"
-              onClick={() => goTo(i)}
-              title={SLIDE_LABELS[i]}
-              aria-label={`Перейти до слайда ${i + 1}: ${SLIDE_LABELS[i]}`}
-              aria-current={i === current ? "page" : undefined}
-            >
-              <span className={i === current ? "active" : ""} />
-            </button>
-          ))}
-        </div>
-
-        <NavBtn onClick={() => goTo(current + 1)} disabled={current === TOTAL_SLIDES - 1} label="Наступний слайд">→</NavBtn>
-
-        <span
-          className="current-slide-label font-mono text-xs ml-1"
-          style={{ color: "rgba(245,240,232,0.35)", letterSpacing: "0.1em", fontFamily: "'DM Mono', monospace" }}
-        >
-          {String(current + 1).padStart(2, "0")} / {String(TOTAL_SLIDES).padStart(2, "0")} · {SLIDE_LABELS[current]}
-        </span>
-
-        <button className="bibliography-jump" onClick={() => goTo(TOTAL_SLIDES - 1)}>
-          Джерела
-        </button>
-      </nav>
+      <footer className="site-credit">
+        <span>← → для навігації · свайп на сенсорному екрані</span>
+        <span>developed by Revasevych Stanislav ©2026</span>
+      </footer>
     </main>
   );
 }
