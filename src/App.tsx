@@ -18,10 +18,10 @@ const IMG = {
   surgery3: "https://images.unsplash.com/photo-1574088332960-4d92e1f0efd0?w=800&h=500&fit=crop&auto=format",
   // Barcode: Boston Public Library — vintage grayscale store
   grocery1: "https://images.unsplash.com/photo-1583504387527-81b66b3f758e?w=1200&h=800&fit=crop&auto=format",
-  // Barcode: Oregon State — vintage couple in grocery store
-  grocery2: "https://images.unsplash.com/photo-1727515471796-6da186c562ca?w=800&h=600&fit=crop&auto=format",
   // Barcode: black/white woman shopping
   grocery3: "https://images.unsplash.com/photo-1635895871710-2aa29c8f4a7c?w=700&h=900&fit=crop&auto=format&crop=left",
+  // Product photographed with the first-scanned UPC display
+  juicyFruit: "https://www.inflowinventory.com/wp-content/uploads/2022/02/First-Scanned-barcode-1024x576.jpg",
 };
 
 /* ─── SVG ICONS ─── */
@@ -698,18 +698,19 @@ function Slide4() {
           </div>
         </div>
 
-        {/* Second image — small */}
+        {/* First UPC-scanned product — Wrigley's Juicy Fruit */}
         <div
-          className="absolute"
-          style={{ top: "44px", left: "12px", width: "42%", height: "28%", border: "1px solid rgba(26,22,18,0.12)", zIndex: 3 }}
+          className="absolute juicy-fruit-photo"
+          style={{ top: "58px", left: "12px", width: "54%", height: "31%", zIndex: 3 }}
         >
-          <ArchivalImg
-            src={IMG.grocery2}
-            alt="Vintage couple in grocery store"
-            caption="Berg's Supermarket, бл. 1950 · Oregon State"
-            style={{ width: "100%", height: "100%" }}
-            tint="sepia(80%) contrast(1.1) brightness(0.8)"
+          <img
+            src={IMG.juicyFruit}
+            alt="Пачка жувальної гумки Wrigley's Juicy Fruit — перший товар, відсканований за UPC-кодом"
           />
+          <div>
+            <strong>Перший товар</strong>
+            <span>Wrigley's Juicy Fruit · 1974</span>
+          </div>
         </div>
       </div>
 
@@ -1131,8 +1132,8 @@ const IMAGE_REFERENCES = [
   { author: "Austrian National Library", detail: "Reserve hospital operating theatre, Vienna", year: "c. 1943", href: "https://unsplash.com/photos/photography-of-people-watching-watching-operation-inside-room-ciMJn3mD5u8" },
   { author: "National Library of Medicine", detail: "King George Military Hospital operating theatre", year: "c. 1915", href: "https://unsplash.com/photos/a-black-and-white-photo-of-a-group-of-doctors-lEfWLtE8tx4" },
   { author: "Boston Public Library", detail: "First National Stores supermarket", year: "1952", href: "https://unsplash.com/photos/grayscale-photo-of-people-in-store-m_xp6NAUJ_4" },
-  { author: "Oregon State University Collections", detail: "Berg's Supermarket", year: "c. 1950", href: "https://unsplash.com/photos/couple-shops-for-meat-in-a-grocery-store-Rhq7Ge04SrM" },
   { author: "Gabe Pierce", detail: "Woman shopping in a grocery store", year: "2021", href: "https://unsplash.com/photos/a-black-and-white-photo-of-a-woman-shopping-in-a-grocery-store-eNa_IA4HfZI" },
+  { author: "inFlow Inventory", detail: "Wrigley's Juicy Fruit at the First Scanned UPC display", year: "1974 object", href: "https://www.inflowinventory.com/blog/why-an-official-gs1-barcode-matters/" },
 ];
 
 function ReferenceItem({ index, author, title, href }: { index: number; author: string; title: string; href: string }) {
@@ -1236,7 +1237,9 @@ export default function App() {
   const [current, setCurrent] = useState(0);
   const [key, setKey] = useState(0);
   const [stageScale, setStageScale] = useState(1);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [orientationNoticeDismissed, setOrientationNoticeDismissed] = useState(false);
+  const presentationRef = useRef<HTMLElement>(null);
   const stageRegionRef = useRef<HTMLDivElement>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
@@ -1248,16 +1251,32 @@ export default function App() {
 
   const Slide = SLIDES[current];
 
+  const toggleFullscreen = useCallback(async () => {
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+      return;
+    }
+
+    await presentationRef.current?.requestFullscreen();
+  }, []);
+
+  useEffect(() => {
+    const onFullscreenChange = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
+  }, []);
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "ArrowLeft") goTo(current - 1);
       if (event.key === "ArrowRight") goTo(current + 1);
       if (event.key === "Home") goTo(0);
       if (event.key === "End") goTo(TOTAL_SLIDES - 1);
+      if (event.key.toLowerCase() === "f") void toggleFullscreen();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [current, goTo]);
+  }, [current, goTo, toggleFullscreen]);
 
   useLayoutEffect(() => {
     const region = stageRegionRef.current;
@@ -1297,7 +1316,7 @@ export default function App() {
   };
 
   return (
-    <main className="presentation-app">
+    <main ref={presentationRef} className="presentation-app">
       <aside
         className={`orientation-gate${orientationNoticeDismissed ? " orientation-gate--dismissed" : ""}`}
         role="dialog"
@@ -1390,6 +1409,23 @@ export default function App() {
 
           <button className="bibliography-jump" onClick={() => goTo(TOTAL_SLIDES - 1)}>
             Джерела
+          </button>
+
+          <button
+            type="button"
+            className="fullscreen-toggle"
+            onClick={() => void toggleFullscreen()}
+            aria-label={isFullscreen ? "Вийти з повноекранного режиму" : "Відкрити презентацію на весь екран"}
+            title={isFullscreen ? "Вийти з повноекранного режиму" : "На весь екран (F)"}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              {isFullscreen ? (
+                <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" />
+              ) : (
+                <path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5" />
+              )}
+            </svg>
+            <span>{isFullscreen ? "Вийти" : "На весь екран"}</span>
           </button>
         </nav>
       </div>
